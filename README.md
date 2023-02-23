@@ -1,17 +1,19 @@
 # aws-infra
-pre requisites
+
+Pre requisites
 
 Install terraform in your system
 https://www.terraform.io/downloads.html
 
-Type terraform -v in your terminal to check terraform version
+Type ```terraform -v``` in your terminal to check terraform version
 
-Install Aws cli in your system
+Install AWS cli in your system
 https://aws.amazon.com/cli/
 
-Type aws --version 
+Type ```aws --version``` in your terminal to check aws cli version
 
-Type aws configure --profile dev
+Create dev profile using aws cli
+Type ```aws configure --profile dev```
 
 You will be asked to provide credentials which you can find by creating access keys in your AWS Console
 
@@ -19,10 +21,13 @@ Steps to run app using terraform infrastructure as code
 
 Clone git repository to your local system and navigate to the project in Terminal using cd aws-infra
 
-use cmd terraform init
+Type ```terraform init```
 
-Then use terraform plan 
+Type ```terraform plan``` to check the deployment plan
 
-Then apply terraform apply 
+Type ```terraform apply``` to apply the changes to the cloud infrastructure
 
-you can see the changes inside the aws console
+
+Assignment-4: 
+Create EC2 Instance with Terraform and attach security group to it.
+
