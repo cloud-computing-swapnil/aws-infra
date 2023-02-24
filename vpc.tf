@@ -183,7 +183,7 @@ resource "aws_route_table_association" "private-subnet-3-route-table-association
 resource "aws_security_group" "application_security_group" {
   name        = "application_security_group"
   description = "allow on port 8080"
-  vpc_id      = aws_vpc.vpc.id
+  vpc_id    = aws_vpc.vpc.id
 
 
   ingress {
@@ -226,26 +226,21 @@ resource "aws_security_group" "application_security_group" {
     ipv6_cidr_blocks = ["::/0"]
   }
 }
-data "aws_ami" "app_ami" {
-  most_recent = true
-  name_regex  = "CUSTOMIZE_-*"
-  owners      = ["self"]
-}
+# data "aws_ami" "app_ami" {
+#   most_recent = true
+#   name_regex  = "CUSTOMIZE_-*"
+#   owners      = ["self"]
+# }
 
 resource "aws_instance" "web_app" {
-  instance_type               = "t2.micro"
-  ami                         = data.aws_ami.app_ami.id
-  vpc_security_group_ids      = [aws_security_group.application_security_group.id]
-  subnet_id                   = aws_subnet.public-subnet-1.id
+  instance_type          = "t2.micro"
+  ami                    = "ami-09b2951891672588a"
+  vpc_security_group_ids = [aws_security_group.application_security_group.id]
+  subnet_id              = aws_subnet.public-subnet-1.id
   associate_public_ip_address = true
-  disable_api_termination     = true
+  disable_api_termination = true
   # root disk
-  root_block_device {
-    volume_size           = "20"
-    volume_type           = "gp2"
-    encrypted             = true
-    delete_on_termination = true
-  }
+  
   # data disk
   ebs_block_device {
     device_name           = "/dev/xvda"
@@ -254,7 +249,7 @@ resource "aws_instance" "web_app" {
     encrypted             = true
     delete_on_termination = true
   }
-  tags = {
-    Name = "Test EC2"
+   tags      = {
+    Name    = "Test EC2"
   }
 }
