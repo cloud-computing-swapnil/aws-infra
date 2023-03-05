@@ -67,6 +67,20 @@ data "aws_availability_zones" "available" {
 
 variable "ami_id" {
   description = "AMI for Ubuntu Ec2 instance"
-  default     = "ami-080564b98b53a7209"
+  default     = "ami-0864f163fe57d1fa6"
   type        = string
+}
+
+variable "db_password" {
+  description = "DB PASSWORD"
+  default     = "postrest"
+  type        = string
+}
+variable "environment" {
+  default = "dev"
+  type    = string
+}
+variable "port" {
+  default = 5432
+  type    = number
 }
