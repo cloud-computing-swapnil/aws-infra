@@ -4,7 +4,7 @@ Pre requisites
 
 Install terraform in your system
 https://www.terraform.io/downloads.html
-xx
+xxxasX
 Type ```terraform -v``` in your terminal to check terraform version
 
 Install AWS cli in your system
