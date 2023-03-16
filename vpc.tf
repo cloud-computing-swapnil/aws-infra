@@ -240,7 +240,7 @@ resource "aws_instance" "web_app" {
   iam_instance_profile        = aws_iam_instance_profile.some_profile.id
   associate_public_ip_address = true
   disable_api_termination     = false
-  user_data=<<-EOF
+  user_data                   = <<-EOF
       #!/bin/bash
       echo "The Webapp"
       /bin/echo
@@ -322,23 +322,23 @@ resource "aws_db_subnet_group" "database_subnet_group" {
 
 #create RDS DB INSTANCE
 resource "aws_db_instance" "database" {
-  db_name                     = "csye6225"
-  engine                      = "postgres"
-  instance_class              = "db.t3.micro"
-  multi_az                    = false
-  identifier                  = "csye6225"
-  allocated_storage           = 10
-  username                    = "csye6225"
-  password                    = var.db_password
-  publicly_accessible         = false
-  skip_final_snapshot         = true
-  db_subnet_group_name        = aws_db_subnet_group.database_subnet_group.name
-  parameter_group_name        = aws_db_parameter_group.paramter_group.name
-  apply_immediately           = true
+  db_name                = "csye6225"
+  engine                 = "postgres"
+  instance_class         = "db.t3.micro"
+  multi_az               = false
+  identifier             = "csye6225"
+  allocated_storage      = 10
+  username               = "csye6225"
+  password               = var.db_password
+  publicly_accessible    = false
+  skip_final_snapshot    = true
+  db_subnet_group_name   = aws_db_subnet_group.database_subnet_group.name
+  parameter_group_name   = aws_db_parameter_group.paramter_group.name
+  apply_immediately      = true
   vpc_security_group_ids = [aws_security_group.database_security_group.id]
 
 }
- 
+
 
 
 #Create IAM ROLE
@@ -439,6 +439,17 @@ resource "aws_s3_bucket_public_access_block" "some_bucket_access" {
   block_public_acls   = true
   block_public_policy = true
   ignore_public_acls  = true
+}
+
+data "aws_route53_zone" "selected" {
+  name = var.root_domain_name
+}
+resource "aws_route53_record" "record" {
+  zone_id = data.aws_route53_zone.selected.zone_id
+  name    = data.aws_route53_zone.selected.name
+  type    = "A"
+  ttl     = "60"
+  records = [aws_instance.web_app.public_ip]
 }
 
 
