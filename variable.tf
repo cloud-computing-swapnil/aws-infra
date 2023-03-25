@@ -84,3 +84,8 @@ variable "port" {
   default = 5432
   type    = number
 }
+variable "root_domain_name" {
+  description = "Domain name"
+  type        = string
+  default     = "dev.swapnilsalsankar.me"
+}
