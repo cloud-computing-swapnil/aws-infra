@@ -252,6 +252,11 @@ resource "aws_instance" "web_app" {
       DB_DATABASE_NAME=${aws_db_instance.database.username}
       BUCKET_REGION=${var.default_region}
       DB_PORT=${var.port}
+      sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+      -a fetch-config \
+      -m ec2 \
+      -c file:/opt/cloudwatch-config.json \
+      -s
       EOF
   # root disk
   root_block_device {
@@ -397,6 +402,10 @@ resource "aws_iam_instance_profile" "some_profile" {
   role = aws_iam_role.EC2-CSYE6225.name
 }
 
+resource "aws_iam_role_policy_attachment" "webapp_cloudwatch_policy_attachment" {
+  role = aws_iam_role.EC2-CSYE6225.name 
+policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy" 
+}
 
 
 # Create S3 Bucket
