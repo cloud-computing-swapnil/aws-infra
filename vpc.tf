@@ -397,6 +397,10 @@ resource "aws_iam_instance_profile" "some_profile" {
   role = aws_iam_role.EC2-CSYE6225.name
 }
 
+resource "aws_iam_role_policy_attachment" "webapp_cloudwatch_policy_attachment" {
+  role = aws_iam_role.EC2-CSYE6225.name 
+policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy" 
+}
 
 
 # Create S3 Bucket
