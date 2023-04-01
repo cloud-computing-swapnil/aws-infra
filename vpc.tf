@@ -252,11 +252,6 @@ resource "aws_instance" "web_app" {
       DB_DATABASE_NAME=${aws_db_instance.database.username}
       BUCKET_REGION=${var.default_region}
       DB_PORT=${var.port}
-      sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-      -a fetch-config \
-      -m ec2 \
-      -c file:/opt/cloudwatch-config.json \
-      -s
       EOF
   # root disk
   root_block_device {
