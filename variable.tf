@@ -57,7 +57,7 @@ variable "default_region" {
   type        = string
 }
 variable "profile" {
-  default     = "dev"
+  default     = "demo"
   description = "Profile"
   type        = string
 }
@@ -67,7 +67,7 @@ data "aws_availability_zones" "available" {
 
 variable "ami_id" {
   description = "AMI for Ubuntu Ec2 instance"
-  default     = "ami-0864f163fe57d1fa6"
+  default     = "ami-00ea3473cb5e45ab3"
   type        = string
 }
 
@@ -77,7 +77,7 @@ variable "db_password" {
   type        = string
 }
 variable "environment" {
-  default = "dev"
+  default = "demo"
   type    = string
 }
 variable "port" {
@@ -87,5 +87,15 @@ variable "port" {
 variable "root_domain_name" {
   description = "Domain name"
   type        = string
-  default     = "dev.swapnilsalsankar.me"
+  default     = "demo.swapnilsalsankar.me"
+}
+
+variable "cpu_upper_limit" {
+  type        = string
+  default     = "1.3"
+}
+
+variable "cpu_lower_limit" {
+  type        = string
+  default     = "1"
 }
