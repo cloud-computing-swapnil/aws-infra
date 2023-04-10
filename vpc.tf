@@ -190,33 +190,32 @@ resource "aws_security_group" "application_security_group" {
     from_port        = 8000
     to_port          = 8000
     protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+   security_groups = [aws_security_group.load_balancer.id]
   }
 
   ingress {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+    security_groups = [aws_security_group.load_balancer.id]
   }
 
-  ingress {
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
 
-  ingress {
-    from_port        = 443
-    to_port          = 443
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
+  # ingress {
+  #   from_port        = 80
+  #   to_port          = 80
+  #   protocol         = "tcp"
+  #   cidr_blocks      = ["0.0.0.0/0"]
+  #   ipv6_cidr_blocks = ["::/0"]
+  # }
+
+  # ingress {
+  #   from_port        = 443
+  #   to_port          = 443
+  #   protocol         = "tcp"
+  #   cidr_blocks      = ["0.0.0.0/0"]
+  #   ipv6_cidr_blocks = ["::/0"]
+  # }
 
   egress {
     from_port        = 0
@@ -226,52 +225,52 @@ resource "aws_security_group" "application_security_group" {
     ipv6_cidr_blocks = ["::/0"]
   }
 }
-data "aws_ami" "app_ami" {
-  most_recent = true
-  name_regex  = "CUSTOMIZE_-*"
-  owners      = ["self"]
-}
+# data "aws_ami" "app_ami" {
+#   most_recent = true
+#   name_regex  = "CUSTOMIZE_-*"
+#   owners      = ["self"]
+# }
 
-resource "aws_instance" "web_app" {
-  instance_type               = "t2.micro"
-  ami                         = data.aws_ami.app_ami.id
-  vpc_security_group_ids      = [aws_security_group.application_security_group.id]
-  subnet_id                   = aws_subnet.public-subnet-1.id
-  iam_instance_profile        = aws_iam_instance_profile.some_profile.id
-  associate_public_ip_address = true
-  disable_api_termination     = false
-  user_data                   = <<-EOF
-      #!/bin/bash
-      echo "The Webapp"
-      /bin/echo
-      cat <<-EOF >>/home/ec2-user/webApp/.env
-      DB_HOST=${aws_db_instance.database.address}
-      DB_USER=${aws_db_instance.database.username}
-      DB_PASSWORD=${var.db_password}
-      BUCKET_NAME=${aws_s3_bucket.S3Bucket.bucket}
-      DB_DATABASE_NAME=${aws_db_instance.database.username}
-      BUCKET_REGION=${var.default_region}
-      DB_PORT=${var.port}
-      EOF
-  # root disk
-  root_block_device {
-    volume_size           = "20"
-    volume_type           = "gp2"
-    encrypted             = true
-    delete_on_termination = true
-  }
-  # data disk
-  ebs_block_device {
-    device_name           = "/dev/xvda"
-    volume_size           = "50"
-    volume_type           = "gp2"
-    encrypted             = true
-    delete_on_termination = true
-  }
-  tags = {
-    Name = "Test EC2"
-  }
-}
+# resource "aws_instance" "web_app" {
+#   instance_type               = "t2.micro"
+#   ami                         = data.aws_ami.app_ami.id
+#   vpc_security_group_ids      = [aws_security_group.application_security_group.id]
+#   subnet_id                   = aws_subnet.public-subnet-1.id
+#   iam_instance_profile        = aws_iam_instance_profile.some_profile.id
+#   associate_public_ip_address = true
+#   disable_api_termination     = false
+#   user_data                   = <<-EOF
+#       #!/bin/bash
+#       echo "The Webapp"
+#       /bin/echo
+#       cat <<-EOF >>/home/ec2-user/webApp/.env
+#       DB_HOST=${aws_db_instance.database.address}
+#       DB_USER=${aws_db_instance.database.username}
+#       DB_PASSWORD=${var.db_password}
+#       BUCKET_NAME=${aws_s3_bucket.S3Bucket.bucket}
+#       DB_DATABASE_NAME=${aws_db_instance.database.username}
+#       BUCKET_REGION=${var.default_region}
+#       DB_PORT=${var.port}
+#       EOF
+#   # root disk
+#   root_block_device {
+#     volume_size           = "20"
+#     volume_type           = "gp2"
+#     encrypted             = true
+#     delete_on_termination = true
+#   }
+#   # data disk
+#   ebs_block_device {
+#     device_name           = "/dev/xvda"
+#     volume_size           = "50"
+#     volume_type           = "gp2"
+#     encrypted             = true
+#     delete_on_termination = true
+#   }
+#   tags = {
+#     Name = "Test EC2"
+#   }
+# }
 
 
 
@@ -452,8 +451,209 @@ resource "aws_route53_record" "record" {
   zone_id = data.aws_route53_zone.selected.zone_id
   name    = data.aws_route53_zone.selected.name
   type    = "A"
-  ttl     = "60"
-  records = [aws_instance.web_app.public_ip]
+   alias {
+    name                   = aws_lb.lb.dns_name
+    zone_id                = aws_lb.lb.zone_id
+    evaluate_target_health = true
+  }
+}
+
+
+
+
+
+
+data "template_file" "user_data" {
+  template = <<-EOF
+      #!/bin/bash
+      echo "The Webapp"
+      /bin/echo
+      cat <<-EOF >>/home/ec2-user/.env
+       DB_HOST=${aws_db_instance.database.address}
+       DB_USER=${aws_db_instance.database.username}
+       DB_PASSWORD=${var.db_password}
+       BUCKET_NAME=${aws_s3_bucket.S3Bucket.bucket}
+       DB_DATABASE_NAME=${aws_db_instance.database.username}
+       BUCKET_REGION=${var.default_region}
+       DB_PORT=${var.port}
+       DB_DIALECT=${aws_db_instance.database.engine}
+      EOF
+}
+
+resource "aws_launch_template" "asg_launch_config" {
+  name = "asg_launch_config"
+  block_device_mappings {
+    device_name = "/dev/sdf"
+    ebs {
+      delete_on_termination = true
+      volume_size           = 50
+      volume_type           = "gp2"
+    }
+  }
+  disable_api_termination = false
+  iam_instance_profile {
+    name = aws_iam_instance_profile.some_profile.id
+  }
+  instance_type = "t2.micro"
+  image_id      = var.ami_id
+  monitoring {
+    enabled = true
+  }
+  network_interfaces {
+    associate_public_ip_address = true
+    subnet_id                   = aws_subnet.public-subnet-1.id
+    security_groups             = [aws_security_group.application_security_group.id]
+  }
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "asg_launch_config"
+    }
+  }
+  user_data = base64encode(data.template_file.user_data.rendered)
+
+}
+
+
+resource "aws_autoscaling_group" "autoscaling_group" {
+  name                = "autoscaling_group"
+  desired_capacity    = 1
+  max_size            = 3
+  min_size            = 1
+  default_cooldown    = 60
+  vpc_zone_identifier = [aws_subnet.public-subnet-1.id, aws_subnet.public-subnet-2.id, aws_subnet.public-subnet-3.id]
+  target_group_arns   = [aws_lb_target_group.alb_tg.arn]
+
+  tag {
+    key                 = "Application"
+    value               = "WebApp"
+    propagate_at_launch = true
+  }
+
+  launch_template {
+    id      = aws_launch_template.asg_launch_config.id
+    version = "$Latest"
+  }
+}
+resource "aws_autoscaling_policy" "scale_up" {
+  name                   = "scale_up"
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 10
+  autoscaling_group_name = aws_autoscaling_group.autoscaling_group.name
+}
+
+resource "aws_cloudwatch_metric_alarm" "upper_limit" {
+  alarm_name          = "upper_limit"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = var.cpu_upper_limit
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.autoscaling_group.name
+  }
+
+  alarm_description = "Checks if the ec2 instance crosses the defined upper limit and triggers a scale up policy"
+  alarm_actions     = [aws_autoscaling_policy.scale_up.arn]
+}
+
+resource "aws_autoscaling_policy" "scale_down" {
+  name                   = "scale_down"
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 10
+  autoscaling_group_name = aws_autoscaling_group.autoscaling_group.name
+}
+
+resource "aws_cloudwatch_metric_alarm" "lower_limit" {
+  alarm_name          = "lower_limit"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = var.cpu_lower_limit
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.autoscaling_group.name
+  }
+
+  alarm_description = "Checks if the ec2 instance falls below the defined lower limit and triggers a scale down policy"
+  alarm_actions     = [aws_autoscaling_policy.scale_down.arn]
+}
+
+//LOAD BALANCERS
+resource "aws_security_group" "load_balancer" {
+  name        = "load_balancer"
+  description = "Security group for the load balancer"
+  vpc_id      = aws_vpc.vpc.id
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "load balancer"
+  }
+}
+resource "aws_lb" "lb" {
+  name               = "webapp-lb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.load_balancer.id]
+  subnets            = [aws_subnet.public-subnet-1.id, aws_subnet.public-subnet-2.id, aws_subnet.public-subnet-3.id]
+
+  enable_deletion_protection = false
+
+  tags = {
+    application = "WebApp"
+  }
+}
+
+resource "aws_lb_target_group" "alb_tg" {
+  name        = "alb-tg"
+  target_type = "instance"
+  port        = 8000
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.vpc.id
+  health_check {
+    path                = "/healthz"
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 15
+    matcher             = "200"
+  }
+}
+
+resource "aws_lb_listener" "lb_listener" {
+  load_balancer_arn = aws_lb.lb.arn
+  port              = "80"
+  protocol          = "HTTP"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.alb_tg.arn
+  }
 }
 
 
