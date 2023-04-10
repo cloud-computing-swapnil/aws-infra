@@ -67,7 +67,7 @@ data "aws_availability_zones" "available" {
 
 variable "ami_id" {
   description = "AMI for Ubuntu Ec2 instance"
-  default     = "ami-0864f163fe57d1fa6"
+  default     = "ami-02e03b814179267be"
   type        = string
 }
 
@@ -88,4 +88,14 @@ variable "root_domain_name" {
   description = "Domain name"
   type        = string
   default     = "dev.swapnilsalsankar.me"
+}
+
+variable "cpu_upper_limit" {
+  type        = string
+  default     = "2"
+}
+
+variable "cpu_lower_limit" {
+  type        = string
+  default     = "1"
 }
