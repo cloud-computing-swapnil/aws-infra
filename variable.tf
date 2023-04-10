@@ -91,11 +91,11 @@ variable "root_domain_name" {
 }
 
 variable "cpu_upper_limit" {
-  type        = string
-  default     = "1.3"
+  type    = string
+  default = "1.3"
 }
 
 variable "cpu_lower_limit" {
-  type        = string
-  default     = "1"
+  type    = string
+  default = "1"
 }
