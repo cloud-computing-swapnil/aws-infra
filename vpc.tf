@@ -187,16 +187,16 @@ resource "aws_security_group" "application_security_group" {
 
 
   ingress {
-    from_port        = 8000
-    to_port          = 8000
-    protocol         = "tcp"
-   security_groups = [aws_security_group.load_balancer.id]
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.load_balancer.id]
   }
 
   ingress {
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
     security_groups = [aws_security_group.load_balancer.id]
   }
 
@@ -397,8 +397,8 @@ resource "aws_iam_instance_profile" "some_profile" {
 }
 
 resource "aws_iam_role_policy_attachment" "webapp_cloudwatch_policy_attachment" {
-  role = aws_iam_role.EC2-CSYE6225.name 
-policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy" 
+  role       = aws_iam_role.EC2-CSYE6225.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
 
@@ -451,7 +451,7 @@ resource "aws_route53_record" "record" {
   zone_id = data.aws_route53_zone.selected.zone_id
   name    = data.aws_route53_zone.selected.name
   type    = "A"
-   alias {
+  alias {
     name                   = aws_lb.lb.dns_name
     zone_id                = aws_lb.lb.zone_id
     evaluate_target_health = true
@@ -468,7 +468,7 @@ data "template_file" "user_data" {
       #!/bin/bash
       echo "The Webapp"
       /bin/echo
-      cat <<-EOF >>/home/ec2-user/.env
+      cat <<-EOF >>/home/ec2-user/webApp/.env
        DB_HOST=${aws_db_instance.database.address}
        DB_USER=${aws_db_instance.database.username}
        DB_PASSWORD=${var.db_password}
