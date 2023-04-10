@@ -468,7 +468,7 @@ data "template_file" "user_data" {
       #!/bin/bash
       echo "The Webapp"
       /bin/echo
-      cat <<-EOF >>/home/ec2-user/.env
+      cat <<-EOF >>/home/ec2-user/webApp/.env
        DB_HOST=${aws_db_instance.database.address}
        DB_USER=${aws_db_instance.database.username}
        DB_PASSWORD=${var.db_password}
