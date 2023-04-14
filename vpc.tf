@@ -318,6 +318,10 @@ resource "aws_db_subnet_group" "database_subnet_group" {
   }
 }
 
+resource "aws_kms_key" "b" { 
+  description = "RDS key 1" 
+  deletion_window_in_days = 10 
+  }
 
 #create RDS DB INSTANCE
 resource "aws_db_instance" "database" {
@@ -335,7 +339,8 @@ resource "aws_db_instance" "database" {
   parameter_group_name   = aws_db_parameter_group.paramter_group.name
   apply_immediately      = true
   vpc_security_group_ids = [aws_security_group.database_security_group.id]
-
+  storage_encrypted = "true"
+  kms_key_id = aws_kms_key.b.arn
 }
 
 
@@ -480,6 +485,64 @@ data "template_file" "user_data" {
       EOF
 }
 
+resource "aws_kms_key" "a" { 
+  description = "EBS key 1" 
+  deletion_window_in_days = 10 
+  }
+
+
+  resource "aws_kms_key_policy" "example" {
+key_id = aws_kms_key.a.id
+policy = jsonencode({
+Id = "key-consolepolicy-1"
+Statement = [
+{
+Sid = "Enable IAM User Permissions",
+Effect = "Allow",
+Principal = {
+"AWS" : "arn:aws:iam::638842484270:root"
+},
+Action = "kms:*",
+Resource = "*"
+},
+{
+Sid = "Allow use of the key",
+Effect = "Allow",
+Principal = {
+"AWS" : "arn:aws:iam::638842484270:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+},
+Action = [
+"kms:Encrypt",
+"kms:Decrypt",
+"kms:ReEncrypt*",
+"kms:GenerateDataKey*",
+"kms:DescribeKey"
+],
+Resource = "*"
+},
+{
+Sid = "Allow attachment of persistent resources",
+Effect = "Allow",
+Principal = {
+"AWS" : "arn:aws:iam::638842484270:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+},
+Action = [
+"kms:CreateGrant",
+"kms:ListGrants",
+"kms:RevokeGrant"
+],
+Resource = "*",
+Condition = {
+Bool = {
+"kms:GrantIsForAWSResource" : "true"
+}
+}
+}
+]
+Version = "2012-10-17"
+})
+}
+
 resource "aws_launch_template" "asg_launch_config" {
   name = "asg_launch_config"
   block_device_mappings {
@@ -488,6 +551,8 @@ resource "aws_launch_template" "asg_launch_config" {
       delete_on_termination = true
       volume_size           = 50
       volume_type           = "gp2"
+      encrypted = "true"
+      kms_key_id = aws_kms_key.a.arn
     }
   }
   disable_api_termination = false
@@ -593,12 +658,12 @@ resource "aws_security_group" "load_balancer" {
   name        = "load_balancer"
   description = "Security group for the load balancer"
   vpc_id      = aws_vpc.vpc.id
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # ingress {
+  #   from_port   = 80
+  #   to_port     = 80
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
   ingress {
     from_port   = 443
     to_port     = 443
@@ -648,8 +713,10 @@ resource "aws_lb_target_group" "alb_tg" {
 
 resource "aws_lb_listener" "lb_listener" {
   load_balancer_arn = aws_lb.lb.arn
-  port              = "80"
-  protocol          = "HTTP"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy = "ELBSecurityPolicy-2016-08" 
+  certificate_arn = "arn:aws:acm:us-east-1:638842484270:certificate/c14bf41f-fc77-482d-a05b-92462f1321ef"
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.alb_tg.arn

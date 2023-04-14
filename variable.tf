@@ -67,7 +67,7 @@ data "aws_availability_zones" "available" {
 
 variable "ami_id" {
   description = "AMI for Ubuntu Ec2 instance"
-  default     = "ami-00ea3473cb5e45ab3"
+  default     = "ami-03386e28a365e7b72"
   type        = string
 }
 
